@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Keizoku Task Tracker</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+    <main class="app">
+
+        <div class="app-label">
+            Keizoku DevOps • Day 3
+        </div>
+
+        <h1>
+            Task Tracker
+        </h1>
+
+        <p class="app-description">
+            A simple JavaScript application for creating,
+            completing and managing tasks.
+        </p>
+
+        <form id="task-form">
+
+            <input
+                id="task-input"
+                type="text"
+                placeholder="Enter a task..."
+                autocomplete="off"
+            >
+
+            <button type="submit">
+                Add Task
+            </button>
+
+        </form>
+
+        <p
+            id="error-message"
+            class="error-message"
+        ></p>
+
+        <div class="stats">
+
+            <div class="stat">
+                <span id="total-count">0</span>
+                <small>Total</small>
+            </div>
+
+            <div class="stat">
+                <span id="remaining-count">0</span>
+                <small>Remaining</small>
+            </div>
+
+            <div class="stat">
+                <span id="completed-count">0</span>
+                <small>Completed</small>
+            </div>
+
+            <div class="stat">
+                <span id="deleted-count">0</span>
+                <small>Deleted</small>
+            </div>
+
+        </div>
+
+        <ul id="task-list"></ul>
+
+        <div
+            id="empty-state"
+            class="empty-state"
+        >
+            No tasks yet.
+        </div>
+
+        <section class="history-section">
+
+            <div class="history-header">
+
+                <div>
+                    <div class="history-label">
+                        Activity
+                    </div>
+
+                    <h2>
+                        Deletion History
+                    </h2>
+                </div>
+
+                <button
+                    id="clear-history-button"
+                    class="clear-history-button"
+                    type="button"
+                >
+                    Clear History
+                </button>
+
+            </div>
+
+            <ul id="history-list"></ul>
+
+            <div
+                id="history-empty-state"
+                class="history-empty-state"
+            >
+                No deleted tasks.
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,338 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding: 80px 20px;
+
+    font-family: Arial, sans-serif;
+
+    background: #0f1115;
+    color: #f5f5f5;
+}
+
+.app {
+    width: min(700px, 100%);
+}
+
+.app-label {
+    margin-bottom: 12px;
+
+    color: #737c8b;
+
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+h1 {
+    margin: 0 0 10px;
+
+    font-size: 48px;
+}
+
+.app-description {
+    margin: 0 0 35px;
+
+    color: #9ea6b3;
+}
+
+form {
+    display: grid;
+
+    grid-template-columns: 1fr auto;
+
+    gap: 12px;
+}
+
+input {
+    width: 100%;
+
+    padding: 15px 16px;
+
+    background: #15181f;
+    color: #f5f5f5;
+
+    border: 1px solid #303746;
+    border-radius: 8px;
+
+    font-size: 16px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #697384;
+}
+
+button {
+    padding: 15px 20px;
+
+    border: 1px solid #343b49;
+    border-radius: 8px;
+
+    background: #f5f5f5;
+    color: #0f1115;
+
+    cursor: pointer;
+
+    font-weight: 700;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.error-message {
+    min-height: 24px;
+
+    margin: 10px 0 0;
+
+    color: #ff8d8d;
+
+    font-size: 14px;
+}
+
+.stats {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 12px;
+
+    margin: 30px 0;
+}
+
+.stat {
+    padding: 18px;
+
+    background: #15181f;
+
+    border: 1px solid #2b313d;
+    border-radius: 10px;
+
+    text-align: center;
+}
+
+.stat span {
+    display: block;
+
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.stat small {
+    color: #8f98a8;
+}
+
+#task-list,
+#history-list {
+    display: grid;
+
+    gap: 12px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.task {
+    display: grid;
+
+    grid-template-columns: auto 1fr auto;
+
+    gap: 14px;
+
+    align-items: center;
+
+    padding: 18px;
+
+    background: #15181f;
+
+    border: 1px solid #2b313d;
+    border-radius: 10px;
+}
+
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+
+    cursor: pointer;
+}
+
+.task-text {
+    overflow-wrap: anywhere;
+}
+
+.task.completed .task-text {
+    color: #737c8b;
+
+    text-decoration: line-through;
+}
+
+.delete-button {
+    padding: 8px 12px;
+
+    background: transparent;
+    color: #aeb5c0;
+
+    font-size: 13px;
+}
+
+.delete-button:hover {
+    color: #ffffff;
+}
+
+.delete-button:disabled {
+    cursor: default;
+
+    color: #737c8b;
+
+    opacity: 0.6;
+}
+
+.delete-button:disabled:hover {
+    color: #737c8b;
+
+    opacity: 0.6;
+}
+
+.empty-state,
+.history-empty-state {
+    padding: 35px;
+
+    color: #737c8b;
+
+    border: 1px dashed #303746;
+    border-radius: 10px;
+
+    text-align: center;
+}
+
+/* DELETION HISTORY */
+
+.history-section {
+    margin-top: 60px;
+    padding-top: 40px;
+
+    border-top: 1px solid #202530;
+}
+
+.history-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+
+    margin-bottom: 24px;
+}
+
+.history-label {
+    margin-bottom: 5px;
+
+    color: #737c8b;
+
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.history-header h2 {
+    margin: 0;
+
+    font-size: 24px;
+}
+
+.clear-history-button {
+    padding: 10px 14px;
+
+    background: transparent;
+    color: #aeb5c0;
+
+    font-size: 13px;
+}
+
+.clear-history-button:hover {
+    color: #ffffff;
+}
+
+.clear-history-button:disabled {
+    cursor: default;
+
+    color: #737c8b;
+
+    opacity: 0.5;
+}
+
+.history-item {
+    display: grid;
+
+    grid-template-columns: 1fr auto;
+
+    gap: 20px;
+
+    align-items: center;
+
+    padding: 16px 18px;
+
+    background: #15181f;
+
+    border: 1px solid #2b313d;
+    border-radius: 10px;
+}
+
+.history-task {
+    color: #aeb5c0;
+
+    overflow-wrap: anywhere;
+}
+
+.history-date {
+    color: #737c8b;
+
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+
+    body {
+        padding-top: 40px;
+    }
+
+    h1 {
+        font-size: 38px;
+    }
+
+    form {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .history-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .history-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .history-date {
+        white-space: normal;
+    }
+
+}
