@@ -38,10 +38,20 @@ const clearHistoryButton =
     document.querySelector("#clear-history-button");
 
 
-let tasks =
-    JSON.parse(
-        localStorage.getItem("keizokuTasks")
-    ) || [];
+let tasks;
+
+try {
+
+    tasks =
+        JSON.parse(
+            localStorage.getItem("keizokuTasks")
+        ) || [];
+
+} catch (error) {
+
+    tasks = [];
+
+}
 
 
 let deletionHistory =
@@ -303,6 +313,8 @@ function renderTasks() {
         checkbox.checked =
             task.completed;
 
+        checkbox.disabled = 
+            task.completed;
 
         const taskText =
             document.createElement("span");
