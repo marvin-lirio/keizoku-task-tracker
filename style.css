@@ -118,6 +118,35 @@ button:hover {
     font-size: 14px;
 }
 
+.task-filters {
+    display: flex;
+    gap: 12px;
+
+    margin-top: 18px;
+}
+
+.filter-group {
+    display: grid;
+    gap: 6px;
+}
+
+.filter-group label {
+    color: #737c8b;
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.filter-group select {
+    min-width: 130px;
+
+    padding: 10px 12px;
+
+    font-size: 14px;
+}
+
 .stats {
     display: grid;
 

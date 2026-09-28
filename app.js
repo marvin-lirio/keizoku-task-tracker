@@ -7,6 +7,12 @@ const taskInput =
 const priorityInput =
     document.querySelector("#priority-input");
 
+const statusFilter =
+    document.querySelector("#status-filter");
+
+const priorityFilter =
+    document.querySelector("#priority-filter");
+
 const taskList =
     document.querySelector("#task-list");
 
@@ -291,6 +297,48 @@ function updateStats() {
 
 
 /*
+    TASK FILTERING
+
+    Filtering controls which tasks are displayed.
+
+    The original tasks array is never modified.
+*/
+
+function getFilteredTasks() {
+
+    const selectedStatus =
+        statusFilter.value;
+
+    const selectedPriority =
+        priorityFilter.value;
+
+
+    return tasks.filter(task => {
+
+        const matchesStatus =
+            selectedStatus === "all" ||
+            selectedStatus === "remaining" &&
+                !task.completed ||
+            selectedStatus === "completed" &&
+                task.completed;
+
+
+        const matchesPriority =
+            selectedPriority === "all" ||
+            task.priority === selectedPriority;
+
+
+        return (
+            matchesStatus &&
+            matchesPriority
+        );
+
+    });
+
+}
+
+
+/*
     TASK RENDERING
 */
 
@@ -299,7 +347,11 @@ function renderTasks() {
     taskList.innerHTML = "";
 
 
-    tasks.forEach(task => {
+    const filteredTasks =
+        getFilteredTasks();
+
+
+    filteredTasks.forEach(task => {
 
         const taskItem =
             document.createElement("li");
@@ -733,6 +785,34 @@ clearHistoryButton.addEventListener(
         saveData();
 
         renderHistory();
+
+    }
+);
+
+
+/*
+    FILTER CONTROLS
+
+    Changing a filter only changes what is displayed.
+
+    It does not modify or save task data.
+*/
+
+statusFilter.addEventListener(
+    "change",
+    () => {
+
+        renderTasks();
+
+    }
+);
+
+
+priorityFilter.addEventListener(
+    "change",
+    () => {
+
+        renderTasks();
 
     }
 );
