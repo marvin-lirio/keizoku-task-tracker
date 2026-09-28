@@ -7,15 +7,6 @@ const taskInput =
 const priorityInput =
     document.querySelector("#priority-input");
 
-const statusFilter =
-    document.querySelector("#status-filter");
-
-const priorityFilter =
-    document.querySelector("#priority-filter");
-
-const sortFilter =
-    document.querySelector("#sort-filter");
-
 const taskList =
     document.querySelector("#task-list");
 
@@ -39,15 +30,96 @@ const deletedCount =
 const emptyState =
     document.querySelector("#empty-state");
 
-
-const historyList =
-    document.querySelector("#history-list");
-
-const historyEmptyState =
-    document.querySelector("#history-empty-state");
-
 const clearHistoryButton =
-    document.querySelector("#clear-history-button");
+    document.querySelector(
+        "#clear-history-button"
+    );
+
+
+const numberHeader =
+    document.querySelector(
+        "#number-header"
+    );
+
+const taskNameHeader =
+    document.querySelector(
+        "#task-name-header"
+    );
+
+const prioritySortButton =
+    document.querySelector(
+        "#priority-sort-button"
+    );
+
+const statusSortButton =
+    document.querySelector(
+        "#status-sort-button"
+    );
+
+
+const priorityFilterSelect =
+    document.querySelector(
+        "#priority-filter"
+    );
+
+const statusFilterSelect =
+    document.querySelector(
+        "#status-filter"
+    );
+
+
+const numberSortIndicator =
+    document.querySelector(
+        "#number-sort-indicator"
+    );
+
+const taskNameSortIndicator =
+    document.querySelector(
+        "#task-name-sort-indicator"
+    );
+
+const prioritySortIndicator =
+    document.querySelector(
+        "#priority-sort-indicator"
+    );
+
+const statusSortIndicator =
+    document.querySelector(
+        "#status-sort-indicator"
+    );
+
+
+/*
+    APPLICATION VIEW STATE
+
+    Sorting and filtering are independent.
+
+    activeSort determines which column controls
+    the current display order.
+
+    Filters determine which records are visible.
+*/
+
+let activeSort =
+    "number";
+
+let numberSort =
+    "ascending";
+
+let taskNameSort =
+    "ascending";
+
+let prioritySort =
+    "high-low";
+
+let statusSort =
+    "todo-done";
+
+let priorityFilter =
+    "all";
+
+let statusFilter =
+    "all";
 
 
 /*
@@ -58,10 +130,17 @@ let tasks;
 
 try {
 
-    tasks =
+    const storedTasks =
         JSON.parse(
-            localStorage.getItem("keizokuTasks")
-        ) || [];
+            localStorage.getItem(
+                "keizokuTasks"
+            )
+        );
+
+    tasks =
+        Array.isArray(storedTasks)
+            ? storedTasks
+            : [];
 
 } catch (error) {
 
@@ -78,12 +157,17 @@ let deletionHistory;
 
 try {
 
-    deletionHistory =
+    const storedHistory =
         JSON.parse(
             localStorage.getItem(
                 "keizokuDeletionHistory"
             )
-        ) || [];
+        );
+
+    deletionHistory =
+        Array.isArray(storedHistory)
+            ? storedHistory
+            : [];
 
 } catch (error) {
 
@@ -94,12 +178,6 @@ try {
 
 /*
     LOAD NEXT TASK NUMBER
-
-    This value is application state.
-
-    It exists independently from active tasks
-    and deletion history so task numbers are
-    never reused when history is cleared.
 */
 
 let nextTaskNumber =
@@ -111,19 +189,33 @@ let nextTaskNumber =
 
 
 /*
+    SAVE APPLICATION DATA
+*/
+
+function saveData() {
+
+    localStorage.setItem(
+        "keizokuTasks",
+        JSON.stringify(tasks)
+    );
+
+    localStorage.setItem(
+        "keizokuDeletionHistory",
+        JSON.stringify(
+            deletionHistory
+        )
+    );
+
+    localStorage.setItem(
+        "keizokuNextTaskNumber",
+        String(nextTaskNumber)
+    );
+
+}
+
+
+/*
     DATA MIGRATION
-
-    Older versions of the application may contain:
-
-    - tasks without priority
-    - tasks without valid numbers
-    - duplicate task numbers
-    - a missing or stale next-task counter
-
-    Startup migration repairs the data and ensures
-    the counter can never move backward from the
-    highest task number we can currently prove
-    has existed.
 */
 
 function migrateTaskData() {
@@ -131,7 +223,11 @@ function migrateTaskData() {
     tasks.forEach(task => {
 
         if (
-            !["Low", "Medium", "High"].includes(
+            ![
+                "Low",
+                "Medium",
+                "High"
+            ].includes(
                 task.priority
             )
         ) {
@@ -177,7 +273,9 @@ function migrateTaskData() {
     tasks.forEach(task => {
 
         const duplicateNumber =
-            Number.isInteger(task.number) &&
+            Number.isInteger(
+                task.number
+            ) &&
             task.number > 0 &&
             tasks.filter(
                 currentTask =>
@@ -187,7 +285,9 @@ function migrateTaskData() {
 
 
         if (
-            !Number.isInteger(task.number) ||
+            !Number.isInteger(
+                task.number
+            ) ||
             task.number <= 0 ||
             duplicateNumber
         ) {
@@ -206,7 +306,6 @@ function migrateTaskData() {
             task.number =
                 highestNumber;
 
-
             usedNumbers.add(
                 task.number
             );
@@ -223,7 +322,9 @@ function migrateTaskData() {
             )
             .filter(
                 number =>
-                    Number.isInteger(number) &&
+                    Number.isInteger(
+                        number
+                    ) &&
                     number > 0
             );
 
@@ -235,7 +336,9 @@ function migrateTaskData() {
             )
             .filter(
                 number =>
-                    Number.isInteger(number) &&
+                    Number.isInteger(
+                        number
+                    ) &&
                     number > 0
             );
 
@@ -248,7 +351,9 @@ function migrateTaskData() {
 
     const highestKnownNumber =
         knownNumbers.length > 0
-            ? Math.max(...knownNumbers)
+            ? Math.max(
+                ...knownNumbers
+            )
             : 0;
 
 
@@ -257,7 +362,9 @@ function migrateTaskData() {
 
 
     if (
-        !Number.isInteger(nextTaskNumber) ||
+        !Number.isInteger(
+            nextTaskNumber
+        ) ||
         nextTaskNumber < 1
     ) {
 
@@ -282,16 +389,6 @@ function migrateTaskData() {
 
 /*
     TASK NUMBER GENERATION
-
-    Task numbering now has one responsibility:
-
-    1. Read the persistent counter.
-    2. Return that number.
-    3. Increment the counter.
-    4. Persist the incremented value.
-
-    Deleting tasks or clearing history can no
-    longer cause an old number to be reused.
 */
 
 function getNextTaskNumber() {
@@ -299,15 +396,12 @@ function getNextTaskNumber() {
     const assignedNumber =
         nextTaskNumber;
 
-
     nextTaskNumber++;
-
 
     localStorage.setItem(
         "keizokuNextTaskNumber",
         String(nextTaskNumber)
     );
-
 
     return assignedNumber;
 
@@ -315,9 +409,7 @@ function getNextTaskNumber() {
 
 
 /*
-    NORMALIZATION
-
-    Used for duplicate comparison.
+    DUPLICATE NORMALIZATION
 */
 
 function normalizeTaskText(text) {
@@ -325,44 +417,20 @@ function normalizeTaskText(text) {
     return text
         .trim()
         .toLowerCase()
-        .replace(/[.,!?;:'"]/g, "")
-        .replace(/\s+/g, " ");
-
-}
-
-
-/*
-    SAVE APPLICATION DATA
-*/
-
-function saveData() {
-
-    localStorage.setItem(
-        "keizokuTasks",
-        JSON.stringify(tasks)
-    );
-
-
-    localStorage.setItem(
-        "keizokuDeletionHistory",
-        JSON.stringify(deletionHistory)
-    );
-
-
-    localStorage.setItem(
-        "keizokuNextTaskNumber",
-        String(nextTaskNumber)
-    );
+        .replace(
+            /[.,!?;:'"]/g,
+            ""
+        )
+        .replace(
+            /\s+/g,
+            " "
+        );
 
 }
 
 
 /*
     STATISTICS
-
-    Statistics represent the complete task
-    collection regardless of filtering
-    or sorting.
 */
 
 function updateStats() {
@@ -370,12 +438,10 @@ function updateStats() {
     const total =
         tasks.length;
 
-
     const completed =
         tasks.filter(
             task => task.completed
         ).length;
-
 
     const remaining =
         total - completed;
@@ -384,67 +450,134 @@ function updateStats() {
     totalCount.textContent =
         total;
 
-    completedCount.textContent =
-        completed;
-
     remainingCount.textContent =
         remaining;
+
+    completedCount.textContent =
+        completed;
 
     deletedCount.textContent =
         deletionHistory.length;
 
+}
 
-    if (total === 0) {
 
-        emptyState.style.display =
-            "block";
+/*
+    HEADER STATE
 
-    } else {
+    Only the active sorting column displays
+    its sorting direction.
 
-        emptyState.style.display =
-            "none";
+    Priority and Status filters remain visible
+    independently of sorting.
+*/
 
-    }
+function updateHeaderState() {
+
+    numberHeader.classList.toggle(
+        "active",
+        activeSort === "number"
+    );
+
+    taskNameHeader.classList.toggle(
+        "active",
+        activeSort === "task-name"
+    );
+
+    prioritySortButton.classList.toggle(
+        "active",
+        activeSort === "priority"
+    );
+
+    statusSortButton.classList.toggle(
+        "active",
+        activeSort === "status"
+    );
+
+
+    numberSortIndicator.textContent =
+        activeSort === "number"
+            ? (
+                numberSort === "ascending"
+                    ? "↑"
+                    : "↓"
+            )
+            : "";
+
+
+    taskNameSortIndicator.textContent =
+        activeSort === "task-name"
+            ? (
+                taskNameSort === "ascending"
+                    ? "A–Z"
+                    : "Z–A"
+            )
+            : "";
+
+
+    prioritySortIndicator.textContent =
+        activeSort === "priority"
+            ? (
+                prioritySort === "high-low"
+                    ? "↓"
+                    : "↑"
+            )
+            : "";
+
+
+    statusSortIndicator.textContent =
+        activeSort === "status"
+            ? (
+                statusSort === "todo-done"
+                    ? "↑"
+                    : "↓"
+            )
+            : "";
+
+
+    priorityFilterSelect.classList.toggle(
+        "active",
+        priorityFilter !== "all"
+    );
+
+    statusFilterSelect.classList.toggle(
+        "active",
+        statusFilter !== "all"
+    );
+
+
+    clearHistoryButton.hidden =
+        statusFilter !== "deleted" ||
+        deletionHistory.length === 0;
 
 }
 
 
 /*
-    TASK FILTERING
-
-    Filtering changes what is displayed.
-
-    It does not modify the original tasks array.
+    FILTER ACTIVE TASKS
 */
 
 function getFilteredTasks() {
 
-    const selectedStatus =
-        statusFilter.value;
-
-    const selectedPriority =
-        priorityFilter.value;
-
-
     return tasks.filter(task => {
 
+        const matchesPriority =
+            priorityFilter === "all" ||
+            task.priority ===
+                priorityFilter;
+
+
         const matchesStatus =
-            selectedStatus === "all" ||
-            selectedStatus === "remaining" &&
+            statusFilter === "all" ||
+            statusFilter === "todo" &&
                 !task.completed ||
-            selectedStatus === "completed" &&
+            statusFilter === "done" &&
                 task.completed;
 
 
-        const matchesPriority =
-            selectedPriority === "all" ||
-            task.priority ===
-                selectedPriority;
-
-
         return (
-            matchesStatus &&
-            matchesPriority
+            matchesPriority &&
+            matchesStatus
         );
 
     });
@@ -453,50 +586,109 @@ function getFilteredTasks() {
 
 
 /*
-    TASK SORTING
+    SORT RECORDS
 
-    Sorting changes display order only.
+    Only one sorting column is active.
 
-    A copy of the filtered array is sorted so
-    the original tasks array is never reordered.
+    Priority:
+        High → Medium → Low
+        Low → Medium → High
+
+    Status:
+        To Do → Done
+        Done → To Do
+
+    Task number is used as the final tie breaker
+    so sorting remains deterministic.
 */
 
-function getSortedTasks(
-    tasksToSort
+function sortRecords(
+    records
 ) {
 
-    const selectedSort =
-        sortFilter.value;
-
-
-    const sortedTasks =
-        [...tasksToSort];
+    const sortedRecords =
+        [...records];
 
 
     const priorityRank = {
-
         High: 3,
         Medium: 2,
         Low: 1
-
     };
 
 
-    if (
-        selectedSort ===
-        "priority-high"
-    ) {
+    sortedRecords.sort(
+        (recordA, recordB) => {
 
-        sortedTasks.sort(
-            (taskA, taskB) => {
+            /*
+                TASK NAME
+            */
+
+            if (
+                activeSort ===
+                "task-name"
+            ) {
+
+                const nameComparison =
+                    recordA.text.localeCompare(
+                        recordB.text,
+                        undefined,
+                        {
+                            sensitivity:
+                                "base"
+                        }
+                    );
+
+
+                if (
+                    nameComparison !== 0
+                ) {
+
+                    return (
+                        taskNameSort ===
+                            "ascending"
+                            ? nameComparison
+                            : -nameComparison
+                    );
+
+                }
+
+
+                return (
+                    recordA.number -
+                    recordB.number
+                );
+
+            }
+
+
+            /*
+                PRIORITY
+            */
+
+            if (
+                activeSort ===
+                "priority"
+            ) {
+
+                const priorityA =
+                    priorityRank[
+                        recordA.priority
+                    ] || 2;
+
+                const priorityB =
+                    priorityRank[
+                        recordB.priority
+                    ] || 2;
+
 
                 const priorityDifference =
-                    priorityRank[
-                        taskB.priority
-                    ] -
-                    priorityRank[
-                        taskA.priority
-                    ];
+                    prioritySort ===
+                        "high-low"
+                        ? priorityB -
+                            priorityA
+                        : priorityA -
+                            priorityB;
 
 
                 if (
@@ -511,423 +703,750 @@ function getSortedTasks(
 
 
                 return (
-                    taskA.number -
-                    taskB.number
+                    recordA.number -
+                    recordB.number
                 );
 
             }
-        );
 
-    } else if (
-        selectedSort ===
-        "priority-low"
-    ) {
 
-        sortedTasks.sort(
-            (taskA, taskB) => {
+            /*
+                STATUS
 
-                const priorityDifference =
-                    priorityRank[
-                        taskA.priority
-                    ] -
-                    priorityRank[
-                        taskB.priority
-                    ];
+                Deleted records all have the
+                same status, so task number is
+                used when viewing Deleted.
+            */
 
+            if (
+                activeSort ===
+                "status"
+            ) {
 
                 if (
-                    priorityDifference !== 0
+                    statusFilter ===
+                        "deleted"
                 ) {
 
                     return (
-                        priorityDifference
+                        recordA.number -
+                        recordB.number
+                    );
+
+                }
+
+
+                const statusA =
+                    recordA.completed
+                        ? 1
+                        : 0;
+
+                const statusB =
+                    recordB.completed
+                        ? 1
+                        : 0;
+
+
+                const statusDifference =
+                    statusSort ===
+                        "todo-done"
+                        ? statusA -
+                            statusB
+                        : statusB -
+                            statusA;
+
+
+                if (
+                    statusDifference !== 0
+                ) {
+
+                    return (
+                        statusDifference
                     );
 
                 }
 
 
                 return (
-                    taskA.number -
-                    taskB.number
+                    recordA.number -
+                    recordB.number
                 );
 
             }
-        );
 
-    } else {
 
-        sortedTasks.sort(
-            (taskA, taskB) =>
-                taskA.number -
-                taskB.number
-        );
+            /*
+                TASK NUMBER
+            */
 
-    }
+            if (
+                numberSort ===
+                    "descending"
+            ) {
 
-
-    return sortedTasks;
-
-}
-
-
-/*
-    TASK RENDERING
-*/
-
-function renderTasks() {
-
-    taskList.innerHTML =
-        "";
-
-
-    const filteredTasks =
-        getFilteredTasks();
-
-
-    const displayTasks =
-        getSortedTasks(
-            filteredTasks
-        );
-
-
-    displayTasks.forEach(task => {
-
-        const taskItem =
-            document.createElement(
-                "li"
-            );
-
-
-        taskItem.className =
-            "task";
-
-
-        if (task.completed) {
-
-            taskItem.classList.add(
-                "completed"
-            );
-
-        }
-
-
-        const checkbox =
-            document.createElement(
-                "input"
-            );
-
-
-        checkbox.type =
-            "checkbox";
-
-        checkbox.className =
-            "task-checkbox";
-
-        checkbox.checked =
-            task.completed;
-
-        checkbox.disabled =
-            task.completed;
-
-
-        const taskContent =
-            document.createElement(
-                "div"
-            );
-
-        taskContent.className =
-            "task-content";
-
-
-        const taskText =
-            document.createElement(
-                "span"
-            );
-
-
-        taskText.className =
-            "task-text";
-
-
-        taskText.textContent =
-            `#${task.number} ${task.text}`;
-
-
-        const taskPriority =
-            document.createElement(
-                "span"
-            );
-
-
-        taskPriority.className =
-            `task-priority priority-${task.priority.toLowerCase()}`;
-
-
-        taskPriority.textContent =
-            task.priority;
-
-
-        taskContent.append(
-            taskText,
-            taskPriority
-        );
-
-
-        const deleteButton =
-            document.createElement(
-                "button"
-            );
-
-
-        deleteButton.className =
-            "delete-button";
-
-
-        if (task.completed) {
-
-            deleteButton.textContent =
-                "Completed";
-
-            deleteButton.disabled =
-                true;
-
-        } else {
-
-            deleteButton.textContent =
-                "Delete";
-
-        }
-
-
-        checkbox.addEventListener(
-            "change",
-            () => {
-
-                task.completed =
-                    checkbox.checked;
-
-
-                saveData();
-
-                renderTasks();
+                return (
+                    recordB.number -
+                    recordA.number
+                );
 
             }
-        );
 
 
-        deleteButton.addEventListener(
-            "click",
-            () => {
-
-                if (
-                    task.completed
-                ) {
-
-                    return;
-
-                }
-
-
-                const confirmed =
-                    confirm(
-                        `Delete task #${task.number}: "${task.text}"?`
-                    );
-
-
-                if (!confirmed) {
-
-                    return;
-
-                }
-
-
-                deletionHistory.push({
-
-                    id:
-                        task.id,
-
-                    number:
-                        task.number,
-
-                    text:
-                        task.text,
-
-                    priority:
-                        task.priority,
-
-                    deletedAt:
-                        new Date()
-                            .toISOString()
-
-                });
-
-
-                tasks =
-                    tasks.filter(
-                        currentTask =>
-                            currentTask.id !==
-                            task.id
-                    );
-
-
-                saveData();
-
-                renderTasks();
-
-                renderHistory();
-
-            }
-        );
-
-
-        taskItem.append(
-            checkbox,
-            taskContent,
-            deleteButton
-        );
-
-
-        taskList.appendChild(
-            taskItem
-        );
-
-    });
-
-
-    updateStats();
-
-}
-
-
-/*
-    DELETION HISTORY RENDERING
-*/
-
-function renderHistory() {
-
-    historyList.innerHTML =
-        "";
-
-
-    const newestFirst =
-        [...deletionHistory]
-            .reverse();
-
-
-    newestFirst.forEach(
-        deletedTask => {
-
-            const historyItem =
-                document.createElement(
-                    "li"
-                );
-
-
-            historyItem.className =
-                "history-item";
-
-
-            const historyContent =
-                document.createElement(
-                    "div"
-                );
-
-
-            historyContent.className =
-                "history-content";
-
-
-            const historyTask =
-                document.createElement(
-                    "div"
-                );
-
-
-            historyTask.className =
-                "history-task";
-
-
-            historyTask.textContent =
-                `#${deletedTask.number} ${deletedTask.text}`;
-
-
-            const historyPriority =
-                document.createElement(
-                    "span"
-                );
-
-
-            historyPriority.className =
-                `task-priority priority-${(
-                    deletedTask.priority ||
-                    "Medium"
-                ).toLowerCase()}`;
-
-
-            historyPriority.textContent =
-                deletedTask.priority ||
-                "Medium";
-
-
-            historyContent.append(
-                historyTask,
-                historyPriority
-            );
-
-
-            const historyDate =
-                document.createElement(
-                    "div"
-                );
-
-
-            historyDate.className =
-                "history-date";
-
-
-            historyDate.textContent =
-                new Date(
-                    deletedTask.deletedAt
-                ).toLocaleString();
-
-
-            historyItem.append(
-                historyContent,
-                historyDate
-            );
-
-
-            historyList.appendChild(
-                historyItem
+            return (
+                recordA.number -
+                recordB.number
             );
 
         }
     );
 
 
-    if (
-        deletionHistory.length === 0
-    ) {
+    return sortedRecords;
 
-        historyEmptyState.style.display =
-            "block";
+}
 
-        clearHistoryButton.disabled =
-            true;
 
-    } else {
+/*
+    CREATE PRIORITY BADGE
+*/
 
-        historyEmptyState.style.display =
-            "none";
+function createPriorityBadge(
+    priority
+) {
 
-        clearHistoryButton.disabled =
-            false;
+    const badge =
+        document.createElement(
+            "span"
+        );
+
+
+    const safePriority =
+        [
+            "Low",
+            "Medium",
+            "High"
+        ].includes(priority)
+            ? priority
+            : "Medium";
+
+
+    badge.className =
+        `task-priority priority-${safePriority.toLowerCase()}`;
+
+    badge.textContent =
+        safePriority;
+
+
+    return badge;
+
+}
+
+
+/*
+    CREATE TRASH BUTTON
+*/
+
+function createDeleteButton(
+    task
+) {
+
+    const deleteButton =
+        document.createElement(
+            "button"
+        );
+
+
+    deleteButton.className =
+        "delete-button";
+
+    deleteButton.type =
+        "button";
+
+    deleteButton.setAttribute(
+        "aria-label",
+        `Delete task #${task.number}`
+    );
+
+
+    deleteButton.innerHTML = `
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path
+                d="M4 7h16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+            />
+            <path
+                d="M9 7V4h6v3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+            />
+            <path
+                d="M6.5 7l1 13h9l1-13"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+            />
+            <path
+                d="M10 11v5M14 11v5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+            />
+        </svg>
+    `;
+
+
+    deleteButton.addEventListener(
+        "click",
+        () => {
+
+            const confirmed =
+                confirm(
+                    `Delete task #${task.number}: "${task.text}"?`
+                );
+
+
+            if (!confirmed) {
+
+                return;
+
+            }
+
+
+            deletionHistory.push({
+
+                id:
+                    task.id,
+
+                number:
+                    task.number,
+
+                text:
+                    task.text,
+
+                priority:
+                    task.priority,
+
+                deletedAt:
+                    new Date()
+                        .toISOString()
+
+            });
+
+
+            tasks =
+                tasks.filter(
+                    currentTask =>
+                        currentTask.id !==
+                        task.id
+                );
+
+
+            saveData();
+
+            render();
+
+        }
+    );
+
+
+    return deleteButton;
+
+}
+
+
+/*
+    RENDER ACTIVE TASK
+*/
+
+function createTaskRow(
+    task
+) {
+
+    const taskItem =
+        document.createElement(
+            "li"
+        );
+
+
+    taskItem.className =
+        "task";
+
+    taskItem.setAttribute(
+        "role",
+        "row"
+    );
+
+
+    if (task.completed) {
+
+        taskItem.classList.add(
+            "completed"
+        );
 
     }
 
 
-    deletedCount.textContent =
-        deletionHistory.length;
+    /*
+        CHECKBOX
+    */
+
+    const checkboxCell =
+        document.createElement(
+            "div"
+        );
+
+    checkboxCell.className =
+        "task-checkbox-cell";
+
+
+    const checkbox =
+        document.createElement(
+            "input"
+        );
+
+    checkbox.type =
+        "checkbox";
+
+    checkbox.className =
+        "task-checkbox";
+
+    checkbox.checked =
+        task.completed;
+
+    checkbox.disabled =
+        task.completed;
+
+    checkbox.setAttribute(
+        "aria-label",
+        `Mark task #${task.number} complete`
+    );
+
+
+    checkbox.addEventListener(
+        "change",
+        () => {
+
+            task.completed =
+                true;
+
+            saveData();
+
+            render();
+
+        }
+    );
+
+
+    checkboxCell.appendChild(
+        checkbox
+    );
+
+
+    /*
+        TASK NUMBER
+    */
+
+    const numberCell =
+        document.createElement(
+            "div"
+        );
+
+    numberCell.className =
+        "task-number";
+
+    numberCell.textContent =
+        `#${task.number}`;
+
+
+    /*
+        TASK NAME
+    */
+
+    const nameCell =
+        document.createElement(
+            "div"
+        );
+
+    nameCell.className =
+        "task-name";
+
+    nameCell.textContent =
+        task.text;
+
+
+    /*
+        PRIORITY
+    */
+
+    const priorityCell =
+        document.createElement(
+            "div"
+        );
+
+    priorityCell.className =
+        "task-priority-cell";
+
+    priorityCell.appendChild(
+        createPriorityBadge(
+            task.priority
+        )
+    );
+
+
+    /*
+        STATUS
+    */
+
+    const statusCell =
+        document.createElement(
+            "div"
+        );
+
+    statusCell.className =
+        "task-status-cell";
+
+
+    const status =
+        document.createElement(
+            "span"
+        );
+
+    status.className =
+        "task-status";
+
+
+    if (task.completed) {
+
+        status.textContent =
+            "Done";
+
+        status.classList.add(
+            "status-done"
+        );
+
+        statusCell.appendChild(
+            status
+        );
+
+    } else {
+
+        status.textContent =
+            "To Do";
+
+        statusCell.append(
+            status,
+            createDeleteButton(task)
+        );
+
+    }
+
+
+    taskItem.append(
+        checkboxCell,
+        numberCell,
+        nameCell,
+        priorityCell,
+        statusCell
+    );
+
+
+    return taskItem;
+
+}
+
+
+/*
+    RENDER DELETED TASK
+*/
+
+function createDeletedRow(
+    deletedTask
+) {
+
+    const taskItem =
+        document.createElement(
+            "li"
+        );
+
+
+    taskItem.className =
+        "task deleted";
+
+    taskItem.setAttribute(
+        "role",
+        "row"
+    );
+
+
+    const checkboxCell =
+        document.createElement(
+            "div"
+        );
+
+    checkboxCell.className =
+        "task-checkbox-cell";
+
+
+    const numberCell =
+        document.createElement(
+            "div"
+        );
+
+    numberCell.className =
+        "task-number";
+
+    numberCell.textContent =
+        `#${deletedTask.number}`;
+
+
+    const nameCell =
+        document.createElement(
+            "div"
+        );
+
+    nameCell.className =
+        "task-name";
+
+    nameCell.textContent =
+        deletedTask.text;
+
+
+    const priorityCell =
+        document.createElement(
+            "div"
+        );
+
+    priorityCell.className =
+        "task-priority-cell";
+
+    priorityCell.appendChild(
+        createPriorityBadge(
+            deletedTask.priority
+        )
+    );
+
+
+    const statusCell =
+        document.createElement(
+            "div"
+        );
+
+    statusCell.className =
+        "task-status-cell";
+
+
+    const status =
+        document.createElement(
+            "span"
+        );
+
+    status.className =
+        "task-status status-deleted";
+
+
+    const statusText =
+        document.createElement(
+            "span"
+        );
+
+    statusText.textContent =
+        "Deleted";
+
+
+    const deletedDate =
+        document.createElement(
+            "span"
+        );
+
+    deletedDate.className =
+        "deleted-date";
+
+    deletedDate.textContent =
+        new Date(
+            deletedTask.deletedAt
+        ).toLocaleString();
+
+
+    status.append(
+        statusText,
+        deletedDate
+    );
+
+    statusCell.appendChild(
+        status
+    );
+
+
+    taskItem.append(
+        checkboxCell,
+        numberCell,
+        nameCell,
+        priorityCell,
+        statusCell
+    );
+
+
+    return taskItem;
+
+}
+
+
+/*
+    RENDER TABLE
+*/
+
+function renderTable() {
+
+    taskList.innerHTML =
+        "";
+
+
+    let displayRecords;
+
+
+    /*
+        DELETED VIEW
+    */
+
+    if (
+        statusFilter === "deleted"
+    ) {
+
+        displayRecords =
+            deletionHistory.filter(
+                deletedTask =>
+                    priorityFilter ===
+                        "all" ||
+                    deletedTask.priority ===
+                        priorityFilter
+            );
+
+
+        displayRecords =
+            sortRecords(
+                displayRecords
+            );
+
+
+        displayRecords.forEach(
+            deletedTask => {
+
+                taskList.appendChild(
+                    createDeletedRow(
+                        deletedTask
+                    )
+                );
+
+            }
+        );
+
+    } else {
+
+        /*
+            ACTIVE TASK VIEW
+        */
+
+        displayRecords =
+            getFilteredTasks();
+
+
+        displayRecords =
+            sortRecords(
+                displayRecords
+            );
+
+
+        displayRecords.forEach(
+            task => {
+
+                taskList.appendChild(
+                    createTaskRow(task)
+                );
+
+            }
+        );
+
+    }
+
+
+    /*
+        EMPTY STATE
+    */
+
+    if (
+        displayRecords.length === 0
+    ) {
+
+        emptyState.style.display =
+            "block";
+
+
+        if (
+            statusFilter === "deleted"
+        ) {
+
+            emptyState.textContent =
+                "No deleted tasks.";
+
+        } else if (
+            statusFilter === "todo"
+        ) {
+
+            emptyState.textContent =
+                "No tasks to do.";
+
+        } else if (
+            statusFilter === "done"
+        ) {
+
+            emptyState.textContent =
+                "No completed tasks.";
+
+        } else if (
+            priorityFilter !== "all"
+        ) {
+
+            emptyState.textContent =
+                `No ${priorityFilter.toLowerCase()} priority tasks.`;
+
+        } else {
+
+            emptyState.textContent =
+                "No tasks yet.";
+
+        }
+
+    } else {
+
+        emptyState.style.display =
+            "none";
+
+    }
+
+}
+
+
+/*
+    MAIN RENDER
+*/
+
+function render() {
+
+    updateStats();
+
+    updateHeaderState();
+
+    renderTable();
 
 }
 
@@ -968,6 +1487,18 @@ taskForm.addEventListener(
             normalizeTaskText(
                 taskText
             );
+
+
+        if (
+            normalizedInput === ""
+        ) {
+
+            errorMessage.textContent =
+                "Enter a valid task name.";
+
+            return;
+
+        }
 
 
         const duplicateTask =
@@ -1027,7 +1558,197 @@ taskForm.addEventListener(
 
         saveData();
 
-        renderTasks();
+        render();
+
+    }
+);
+
+
+/*
+    TASK NUMBER SORT
+*/
+
+numberHeader.addEventListener(
+    "click",
+    () => {
+
+        if (
+            activeSort ===
+                "number"
+        ) {
+
+            numberSort =
+                numberSort ===
+                    "ascending"
+                    ? "descending"
+                    : "ascending";
+
+        } else {
+
+            activeSort =
+                "number";
+
+            numberSort =
+                "ascending";
+
+        }
+
+
+        render();
+
+    }
+);
+
+
+/*
+    TASK NAME SORT
+*/
+
+taskNameHeader.addEventListener(
+    "click",
+    () => {
+
+        if (
+            activeSort ===
+                "task-name"
+        ) {
+
+            taskNameSort =
+                taskNameSort ===
+                    "ascending"
+                    ? "descending"
+                    : "ascending";
+
+        } else {
+
+            activeSort =
+                "task-name";
+
+            taskNameSort =
+                "ascending";
+
+        }
+
+
+        render();
+
+    }
+);
+
+
+/*
+    PRIORITY SORT
+
+    First activation:
+        High → Medium → Low
+
+    Additional click:
+        Low → Medium → High
+*/
+
+prioritySortButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            activeSort ===
+                "priority"
+        ) {
+
+            prioritySort =
+                prioritySort ===
+                    "high-low"
+                    ? "low-high"
+                    : "high-low";
+
+        } else {
+
+            activeSort =
+                "priority";
+
+            prioritySort =
+                "high-low";
+
+        }
+
+
+        render();
+
+    }
+);
+
+
+/*
+    STATUS SORT
+
+    First activation:
+        To Do → Done
+
+    Additional click:
+        Done → To Do
+*/
+
+statusSortButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            activeSort ===
+                "status"
+        ) {
+
+            statusSort =
+                statusSort ===
+                    "todo-done"
+                    ? "done-todo"
+                    : "todo-done";
+
+        } else {
+
+            activeSort =
+                "status";
+
+            statusSort =
+                "todo-done";
+
+        }
+
+
+        render();
+
+    }
+);
+
+
+/*
+    PRIORITY FILTER
+*/
+
+priorityFilterSelect.addEventListener(
+    "change",
+    () => {
+
+        priorityFilter =
+            priorityFilterSelect.value;
+
+        render();
+
+    }
+);
+
+
+/*
+    STATUS FILTER
+*/
+
+statusFilterSelect.addEventListener(
+    "change",
+    () => {
+
+        statusFilter =
+            statusFilterSelect.value;
+
+        render();
 
     }
 );
@@ -1035,9 +1756,6 @@ taskForm.addEventListener(
 
 /*
     CLEAR DELETION HISTORY
-
-    Clearing history intentionally does NOT
-    change nextTaskNumber.
 */
 
 clearHistoryButton.addEventListener(
@@ -1072,45 +1790,7 @@ clearHistoryButton.addEventListener(
 
         saveData();
 
-        renderHistory();
-
-    }
-);
-
-
-/*
-    FILTER AND SORT CONTROLS
-
-    These controls change presentation only.
-
-    They do not modify or save task data.
-*/
-
-statusFilter.addEventListener(
-    "change",
-    () => {
-
-        renderTasks();
-
-    }
-);
-
-
-priorityFilter.addEventListener(
-    "change",
-    () => {
-
-        renderTasks();
-
-    }
-);
-
-
-sortFilter.addEventListener(
-    "change",
-    () => {
-
-        renderTasks();
+        render();
 
     }
 );
@@ -1122,6 +1802,4 @@ sortFilter.addEventListener(
 
 migrateTaskData();
 
-renderTasks();
-
-renderHistory();
+render();

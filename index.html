@@ -21,99 +21,51 @@
 
     <main class="app">
 
-        <div class="app-label">
-            Keizoku DevOps • Day 3
-        </div>
+        <header class="app-header">
 
-        <h1>
-            Task Tracker
-        </h1>
-
-        <p class="app-description">
-            A simple JavaScript application for creating,
-            completing and managing tasks.
-        </p>
-
-        <form id="task-form">
-
-            <input
-                id="task-input"
-                type="text"
-                placeholder="Enter a task..."
-                autocomplete="off"
-            >
-
-            <select
-                id="priority-input"
-                aria-label="Task priority"
-            >
-                <option value="Low">
-                    Low
-                </option>
-
-                <option
-                    value="Medium"
-                    selected
-                >
-                    Medium
-                </option>
-
-                <option value="High">
-                    High
-                </option>
-            </select>
-
-            <button type="submit">
-                Add Task
-            </button>
-
-        </form>
-
-        <p
-            id="error-message"
-            class="error-message"
-        ></p>
-
-        <div class="task-filters">
-
-            <div class="filter-group">
-
-                <label for="status-filter">
-                    Status
-                </label>
-
-                <select id="status-filter">
-                    <option value="all">
-                        All
-                    </option>
-
-                    <option value="remaining">
-                        Remaining
-                    </option>
-
-                    <option value="completed">
-                        Completed
-                    </option>
-                </select>
-
+            <div class="app-label">
+                Keizoku DevOps • Task Tracker
             </div>
 
-            <div class="filter-group">
+            <h1>
+                Task Tracker
+            </h1>
 
-                <label for="priority-filter">
-                    Priority
-                </label>
+            <p class="app-description">
+                A simple JavaScript application for creating,
+                completing and managing tasks.
+            </p>
 
-                <select id="priority-filter">
-                    <option value="all">
-                        All
-                    </option>
+        </header>
 
+
+        <section
+            class="task-entry"
+            aria-label="Add task"
+        >
+
+            <form id="task-form">
+
+                <input
+                    id="task-input"
+                    type="text"
+                    placeholder="Enter a task..."
+                    autocomplete="off"
+                    aria-label="Task name"
+                >
+
+                <select
+                    id="priority-input"
+                    aria-label="Task priority"
+                >
                     <option value="Low">
                         Low
                     </option>
 
-                    <option value="Medium">
+                    <option
+                        value="Medium"
+                        selected
+                    >
                         Medium
                     </option>
 
@@ -122,101 +74,265 @@
                     </option>
                 </select>
 
-            </div>
+                <button
+                    class="add-task-button"
+                    type="submit"
+                >
+                    Add Task
+                </button>
 
-            <div class="filter-group">
+            </form>
 
-                <label for="sort-filter">
-                    Sort By
-                </label>
+            <p
+                id="error-message"
+                class="error-message"
+                aria-live="polite"
+            ></p>
 
-                <select id="sort-filter">
-                    <option value="number">
-                        Task Number
-                    </option>
+        </section>
 
-                    <option value="priority-high">
-                        Priority: High → Low
-                    </option>
 
-                    <option value="priority-low">
-                        Priority: Low → High
-                    </option>
-                </select>
-
-            </div>
-
-        </div>
-
-        <div class="stats">
-
-            <div class="stat">
-                <span id="total-count">0</span>
-                <small>Total</small>
-            </div>
-
-            <div class="stat">
-                <span id="remaining-count">0</span>
-                <small>Remaining</small>
-            </div>
-
-            <div class="stat">
-                <span id="completed-count">0</span>
-                <small>Completed</small>
-            </div>
-
-            <div class="stat">
-                <span id="deleted-count">0</span>
-                <small>Deleted</small>
-            </div>
-
-        </div>
-
-        <ul id="task-list"></ul>
-
-        <div
-            id="empty-state"
-            class="empty-state"
+        <section
+            class="stats"
+            aria-label="Task statistics"
         >
-            No tasks yet.
-        </div>
 
-        <section class="history-section">
+            <div class="stat">
+                <span id="total-count">
+                    0
+                </span>
 
-            <div class="history-header">
+                <small>
+                    Total
+                </small>
+            </div>
+
+            <div class="stat">
+                <span id="remaining-count">
+                    0
+                </span>
+
+                <small>
+                    To Do
+                </small>
+            </div>
+
+            <div class="stat">
+                <span id="completed-count">
+                    0
+                </span>
+
+                <small>
+                    Done
+                </small>
+            </div>
+
+            <div class="stat">
+                <span id="deleted-count">
+                    0
+                </span>
+
+                <small>
+                    Deleted
+                </small>
+            </div>
+
+        </section>
+
+
+        <section class="tasks-section">
+
+            <div class="section-heading">
 
                 <div>
-                    <div class="history-label">
-                        Activity
+
+                    <div class="section-label">
+                        Workspace
                     </div>
 
                     <h2>
-                        Deletion History
+                        Tasks
                     </h2>
+
                 </div>
 
                 <button
                     id="clear-history-button"
                     class="clear-history-button"
                     type="button"
+                    hidden
                 >
                     Clear History
                 </button>
 
             </div>
 
-            <ul id="history-list"></ul>
 
             <div
-                id="history-empty-state"
-                class="history-empty-state"
+                class="task-table"
+                role="table"
+                aria-label="Tasks"
             >
-                No deleted tasks.
+
+                <div
+                    class="task-table-header"
+                    role="row"
+                >
+
+                    <div
+                        class="checkbox-column"
+                        role="columnheader"
+                        aria-label="Complete task"
+                    ></div>
+
+
+                    <button
+                        id="number-header"
+                        class="column-header sort-header active"
+                        type="button"
+                        role="columnheader"
+                    >
+                        <span>
+                            Task #
+                        </span>
+
+                        <span
+                            id="number-sort-indicator"
+                            class="sort-indicator"
+                        >
+                            ↑
+                        </span>
+                    </button>
+
+
+                    <button
+                        id="task-name-header"
+                        class="column-header sort-header"
+                        type="button"
+                        role="columnheader"
+                    >
+                        <span>
+                            Task
+                        </span>
+
+                        <span
+                            id="task-name-sort-indicator"
+                            class="sort-indicator"
+                        ></span>
+                    </button>
+
+
+                    <div
+                        class="column-header compound-header"
+                        role="columnheader"
+                    >
+
+                        <button
+                            id="priority-sort-button"
+                            class="column-sort-button"
+                            type="button"
+                        >
+                            <span>
+                                Priority
+                            </span>
+
+                            <span
+                                id="priority-sort-indicator"
+                                class="sort-indicator"
+                            ></span>
+                        </button>
+
+                        <select
+                            id="priority-filter"
+                            class="header-filter"
+                            aria-label="Filter tasks by priority"
+                        >
+                            <option value="all">
+                                All
+                            </option>
+
+                            <option value="High">
+                                High
+                            </option>
+
+                            <option value="Medium">
+                                Medium
+                            </option>
+
+                            <option value="Low">
+                                Low
+                            </option>
+                        </select>
+
+                    </div>
+
+
+                    <div
+                        class="column-header compound-header"
+                        role="columnheader"
+                    >
+
+                        <button
+                            id="status-sort-button"
+                            class="column-sort-button"
+                            type="button"
+                        >
+                            <span>
+                                Status
+                            </span>
+
+                            <span
+                                id="status-sort-indicator"
+                                class="sort-indicator"
+                            ></span>
+                        </button>
+
+                        <select
+                            id="status-filter"
+                            class="header-filter"
+                            aria-label="Filter tasks by status"
+                        >
+                            <option value="all">
+                                All
+                            </option>
+
+                            <option value="todo">
+                                To Do
+                            </option>
+
+                            <option value="done">
+                                Done
+                            </option>
+
+                            <option value="deleted">
+                                Deleted
+                            </option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <ul
+                    id="task-list"
+                    class="task-list"
+                ></ul>
+
+
+                <div
+                    id="empty-state"
+                    class="empty-state"
+                >
+                    No tasks yet.
+                </div>
+
             </div>
 
         </section>
 
     </main>
+
 
     <script src="app.js"></script>
 
