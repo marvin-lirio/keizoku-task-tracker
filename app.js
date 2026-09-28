@@ -50,6 +50,10 @@ const clearHistoryButton =
     document.querySelector("#clear-history-button");
 
 
+/*
+    LOAD TASK DATA
+*/
+
 let tasks;
 
 try {
@@ -66,20 +70,60 @@ try {
 }
 
 
-let deletionHistory =
-    JSON.parse(
-        localStorage.getItem("keizokuDeletionHistory")
-    ) || [];
+/*
+    LOAD DELETION HISTORY
+*/
+
+let deletionHistory;
+
+try {
+
+    deletionHistory =
+        JSON.parse(
+            localStorage.getItem(
+                "keizokuDeletionHistory"
+            )
+        ) || [];
+
+} catch (error) {
+
+    deletionHistory = [];
+
+}
+
+
+/*
+    LOAD NEXT TASK NUMBER
+
+    This value is application state.
+
+    It exists independently from active tasks
+    and deletion history so task numbers are
+    never reused when history is cleared.
+*/
+
+let nextTaskNumber =
+    Number(
+        localStorage.getItem(
+            "keizokuNextTaskNumber"
+        )
+    );
 
 
 /*
     DATA MIGRATION
 
-    Older versions of the application created tasks
-    without sequential task numbers or priority values.
+    Older versions of the application may contain:
 
-    When the application starts, existing tasks are
-    inspected and missing data is assigned.
+    - tasks without priority
+    - tasks without valid numbers
+    - duplicate task numbers
+    - a missing or stale next-task counter
+
+    Startup migration repairs the data and ensures
+    the counter can never move backward from the
+    highest task number we can currently prove
+    has existed.
 */
 
 function migrateTaskData() {
@@ -100,9 +144,11 @@ function migrateTaskData() {
     });
 
 
-    const usedNumbers = new Set();
+    const usedNumbers =
+        new Set();
 
-    let highestNumber = 0;
+    let highestNumber =
+        0;
 
 
     tasks.forEach(task => {
@@ -113,7 +159,9 @@ function migrateTaskData() {
             !usedNumbers.has(task.number)
         ) {
 
-            usedNumbers.add(task.number);
+            usedNumbers.add(
+                task.number
+            );
 
             highestNumber =
                 Math.max(
@@ -128,14 +176,20 @@ function migrateTaskData() {
 
     tasks.forEach(task => {
 
+        const duplicateNumber =
+            Number.isInteger(task.number) &&
+            task.number > 0 &&
+            tasks.filter(
+                currentTask =>
+                    currentTask.number ===
+                    task.number
+            ).length > 1;
+
+
         if (
             !Number.isInteger(task.number) ||
             task.number <= 0 ||
-            usedNumbers.has(task.number) &&
-            tasks.filter(
-                currentTask =>
-                    currentTask.number === task.number
-            ).length > 1
+            duplicateNumber
         ) {
 
             do {
@@ -143,62 +197,119 @@ function migrateTaskData() {
                 highestNumber++;
 
             } while (
-                usedNumbers.has(highestNumber)
+                usedNumbers.has(
+                    highestNumber
+                )
             );
 
 
-            task.number = highestNumber;
+            task.number =
+                highestNumber;
 
-            usedNumbers.add(task.number);
+
+            usedNumbers.add(
+                task.number
+            );
 
         }
 
     });
 
 
-    localStorage.setItem(
-        "keizokuTasks",
-        JSON.stringify(tasks)
-    );
-
-}
-
-
-/*
-    NEXT TASK NUMBER
-
-    Determine the next task number from active
-    and deleted task data.
-*/
-
-function getNextTaskNumber() {
-
     const activeNumbers =
-        tasks.map(
-            task => task.number || 0
-        );
+        tasks
+            .map(
+                task => task.number
+            )
+            .filter(
+                number =>
+                    Number.isInteger(number) &&
+                    number > 0
+            );
 
 
     const deletedNumbers =
-        deletionHistory.map(
-            task => task.number || 0
-        );
+        deletionHistory
+            .map(
+                task => task.number
+            )
+            .filter(
+                number =>
+                    Number.isInteger(number) &&
+                    number > 0
+            );
 
 
-    const allNumbers = [
+    const knownNumbers = [
         ...activeNumbers,
         ...deletedNumbers
     ];
 
 
-    if (allNumbers.length === 0) {
+    const highestKnownNumber =
+        knownNumbers.length > 0
+            ? Math.max(...knownNumbers)
+            : 0;
 
-        return 1;
+
+    const minimumSafeNextNumber =
+        highestKnownNumber + 1;
+
+
+    if (
+        !Number.isInteger(nextTaskNumber) ||
+        nextTaskNumber < 1
+    ) {
+
+        nextTaskNumber =
+            minimumSafeNextNumber;
+
+    } else {
+
+        nextTaskNumber =
+            Math.max(
+                nextTaskNumber,
+                minimumSafeNextNumber
+            );
 
     }
 
 
-    return Math.max(...allNumbers) + 1;
+    saveData();
+
+}
+
+
+/*
+    TASK NUMBER GENERATION
+
+    Task numbering now has one responsibility:
+
+    1. Read the persistent counter.
+    2. Return that number.
+    3. Increment the counter.
+    4. Persist the incremented value.
+
+    Deleting tasks or clearing history can no
+    longer cause an old number to be reused.
+*/
+
+function getNextTaskNumber() {
+
+    const assignedNumber =
+        nextTaskNumber;
+
+
+    nextTaskNumber++;
+
+
+    localStorage.setItem(
+        "keizokuNextTaskNumber",
+        String(nextTaskNumber)
+    );
+
+
+    return assignedNumber;
 
 }
 
@@ -221,7 +332,7 @@ function normalizeTaskText(text) {
 
 
 /*
-    SAVE
+    SAVE APPLICATION DATA
 */
 
 function saveData() {
@@ -237,14 +348,20 @@ function saveData() {
         JSON.stringify(deletionHistory)
     );
 
+
+    localStorage.setItem(
+        "keizokuNextTaskNumber",
+        String(nextTaskNumber)
+    );
+
 }
 
 
 /*
     STATISTICS
 
-    Statistics always represent the complete
-    task collection, regardless of filters
+    Statistics represent the complete task
+    collection regardless of filtering
     or sorting.
 */
 
@@ -295,9 +412,9 @@ function updateStats() {
 /*
     TASK FILTERING
 
-    Filtering controls which tasks are displayed.
+    Filtering changes what is displayed.
 
-    The original tasks array is never modified.
+    It does not modify the original tasks array.
 */
 
 function getFilteredTasks() {
@@ -321,7 +438,8 @@ function getFilteredTasks() {
 
         const matchesPriority =
             selectedPriority === "all" ||
-            task.priority === selectedPriority;
+            task.priority ===
+                selectedPriority;
 
 
         return (
@@ -337,13 +455,15 @@ function getFilteredTasks() {
 /*
     TASK SORTING
 
-    Sorting controls display order only.
+    Sorting changes display order only.
 
-    A copy of the filtered task array is sorted
-    so the original tasks array is never reordered.
+    A copy of the filtered array is sorted so
+    the original tasks array is never reordered.
 */
 
-function getSortedTasks(tasksToSort) {
+function getSortedTasks(
+    tasksToSort
+) {
 
     const selectedSort =
         sortFilter.value;
@@ -363,22 +483,29 @@ function getSortedTasks(tasksToSort) {
 
 
     if (
-        selectedSort === "priority-high"
+        selectedSort ===
+        "priority-high"
     ) {
 
         sortedTasks.sort(
             (taskA, taskB) => {
 
                 const priorityDifference =
-                    priorityRank[taskB.priority] -
-                    priorityRank[taskA.priority];
+                    priorityRank[
+                        taskB.priority
+                    ] -
+                    priorityRank[
+                        taskA.priority
+                    ];
 
 
                 if (
                     priorityDifference !== 0
                 ) {
 
-                    return priorityDifference;
+                    return (
+                        priorityDifference
+                    );
 
                 }
 
@@ -392,22 +519,29 @@ function getSortedTasks(tasksToSort) {
         );
 
     } else if (
-        selectedSort === "priority-low"
+        selectedSort ===
+        "priority-low"
     ) {
 
         sortedTasks.sort(
             (taskA, taskB) => {
 
                 const priorityDifference =
-                    priorityRank[taskA.priority] -
-                    priorityRank[taskB.priority];
+                    priorityRank[
+                        taskA.priority
+                    ] -
+                    priorityRank[
+                        taskB.priority
+                    ];
 
 
                 if (
                     priorityDifference !== 0
                 ) {
 
-                    return priorityDifference;
+                    return (
+                        priorityDifference
+                    );
 
                 }
 
@@ -442,7 +576,8 @@ function getSortedTasks(tasksToSort) {
 
 function renderTasks() {
 
-    taskList.innerHTML = "";
+    taskList.innerHTML =
+        "";
 
 
     const filteredTasks =
@@ -458,7 +593,9 @@ function renderTasks() {
     displayTasks.forEach(task => {
 
         const taskItem =
-            document.createElement("li");
+            document.createElement(
+                "li"
+            );
 
 
         taskItem.className =
@@ -475,7 +612,9 @@ function renderTasks() {
 
 
         const checkbox =
-            document.createElement("input");
+            document.createElement(
+                "input"
+            );
 
 
         checkbox.type =
@@ -492,14 +631,18 @@ function renderTasks() {
 
 
         const taskContent =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         taskContent.className =
             "task-content";
 
 
         const taskText =
-            document.createElement("span");
+            document.createElement(
+                "span"
+            );
 
 
         taskText.className =
@@ -511,10 +654,14 @@ function renderTasks() {
 
 
         const taskPriority =
-            document.createElement("span");
+            document.createElement(
+                "span"
+            );
+
 
         taskPriority.className =
             `task-priority priority-${task.priority.toLowerCase()}`;
+
 
         taskPriority.textContent =
             task.priority;
@@ -527,7 +674,9 @@ function renderTasks() {
 
 
         const deleteButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
 
         deleteButton.className =
@@ -570,7 +719,9 @@ function renderTasks() {
             "click",
             () => {
 
-                if (task.completed) {
+                if (
+                    task.completed
+                ) {
 
                     return;
 
@@ -592,16 +743,21 @@ function renderTasks() {
 
                 deletionHistory.push({
 
-                    id: task.id,
+                    id:
+                        task.id,
 
-                    number: task.number,
+                    number:
+                        task.number,
 
-                    text: task.text,
+                    text:
+                        task.text,
 
-                    priority: task.priority,
+                    priority:
+                        task.priority,
 
                     deletedAt:
-                        new Date().toISOString()
+                        new Date()
+                            .toISOString()
 
                 });
 
@@ -649,18 +805,22 @@ function renderTasks() {
 
 function renderHistory() {
 
-    historyList.innerHTML = "";
+    historyList.innerHTML =
+        "";
 
 
     const newestFirst =
-        [...deletionHistory].reverse();
+        [...deletionHistory]
+            .reverse();
 
 
     newestFirst.forEach(
         deletedTask => {
 
             const historyItem =
-                document.createElement("li");
+                document.createElement(
+                    "li"
+                );
 
 
             historyItem.className =
@@ -668,14 +828,19 @@ function renderHistory() {
 
 
             const historyContent =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
+
 
             historyContent.className =
                 "history-content";
 
 
             const historyTask =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             historyTask.className =
@@ -687,15 +852,21 @@ function renderHistory() {
 
 
             const historyPriority =
-                document.createElement("span");
+                document.createElement(
+                    "span"
+                );
+
 
             historyPriority.className =
                 `task-priority priority-${(
-                    deletedTask.priority || "Medium"
+                    deletedTask.priority ||
+                    "Medium"
                 ).toLowerCase()}`;
 
+
             historyPriority.textContent =
-                deletedTask.priority || "Medium";
+                deletedTask.priority ||
+                "Medium";
 
 
             historyContent.append(
@@ -705,7 +876,9 @@ function renderHistory() {
 
 
             const historyDate =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             historyDate.className =
@@ -732,7 +905,9 @@ function renderHistory() {
     );
 
 
-    if (deletionHistory.length === 0) {
+    if (
+        deletionHistory.length === 0
+    ) {
 
         historyEmptyState.style.display =
             "block";
@@ -771,10 +946,15 @@ taskForm.addEventListener(
         const taskText =
             taskInput.value
                 .trim()
-                .replace(/\s+/g, " ");
+                .replace(
+                    /\s+/g,
+                    " "
+                );
 
 
-        if (taskText === "") {
+        if (
+            taskText === ""
+        ) {
 
             errorMessage.textContent =
                 "Enter a task before adding it.";
@@ -855,6 +1035,9 @@ taskForm.addEventListener(
 
 /*
     CLEAR DELETION HISTORY
+
+    Clearing history intentionally does NOT
+    change nextTaskNumber.
 */
 
 clearHistoryButton.addEventListener(
@@ -883,7 +1066,8 @@ clearHistoryButton.addEventListener(
         }
 
 
-        deletionHistory = [];
+        deletionHistory =
+            [];
 
 
         saveData();
