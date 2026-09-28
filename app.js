@@ -4,6 +4,9 @@ const taskForm =
 const taskInput =
     document.querySelector("#task-input");
 
+const priorityInput =
+    document.querySelector("#priority-input");
+
 const taskList =
     document.querySelector("#task-list");
 
@@ -64,13 +67,29 @@ let deletionHistory =
     DATA MIGRATION
 
     Older versions of the application created tasks
-    without sequential task numbers.
+    without sequential task numbers or priority values.
 
     When the application starts, existing tasks are
-    inspected and missing numbers are assigned.
+    inspected and missing data is assigned.
 */
 
 function migrateTaskData() {
+
+    tasks.forEach(task => {
+
+        if (
+            !["Low", "Medium", "High"].includes(
+                task.priority
+            )
+        ) {
+
+            task.priority =
+                "Medium";
+
+        }
+
+    });
+
 
     const usedNumbers = new Set();
 
@@ -192,7 +211,6 @@ function getNextTaskNumber() {
     "finish day 3"
 */
 
-
 function normalizeTaskText(text) {
 
     return text
@@ -313,8 +331,16 @@ function renderTasks() {
         checkbox.checked =
             task.completed;
 
-        checkbox.disabled = 
+        checkbox.disabled =
             task.completed;
+
+
+        const taskContent =
+            document.createElement("div");
+
+        taskContent.className =
+            "task-content";
+
 
         const taskText =
             document.createElement("span");
@@ -326,6 +352,22 @@ function renderTasks() {
 
         taskText.textContent =
             `#${task.number} ${task.text}`;
+
+
+        const taskPriority =
+            document.createElement("span");
+
+        taskPriority.className =
+            `task-priority priority-${task.priority.toLowerCase()}`;
+
+        taskPriority.textContent =
+            task.priority;
+
+
+        taskContent.append(
+            taskText,
+            taskPriority
+        );
 
 
         const deleteButton =
@@ -400,6 +442,8 @@ function renderTasks() {
 
                     text: task.text,
 
+                    priority: task.priority,
+
                     deletedAt:
                         new Date().toISOString()
 
@@ -426,7 +470,7 @@ function renderTasks() {
 
         taskItem.append(
             checkbox,
-            taskText,
+            taskContent,
             deleteButton
         );
 
@@ -467,6 +511,13 @@ function renderHistory() {
                 "history-item";
 
 
+            const historyContent =
+                document.createElement("div");
+
+            historyContent.className =
+                "history-content";
+
+
             const historyTask =
                 document.createElement("div");
 
@@ -477,6 +528,24 @@ function renderHistory() {
 
             historyTask.textContent =
                 `#${deletedTask.number} ${deletedTask.text}`;
+
+
+            const historyPriority =
+                document.createElement("span");
+
+            historyPriority.className =
+                `task-priority priority-${(
+                    deletedTask.priority || "Medium"
+                ).toLowerCase()}`;
+
+            historyPriority.textContent =
+                deletedTask.priority || "Medium";
+
+
+            historyContent.append(
+                historyTask,
+                historyPriority
+            );
 
 
             const historyDate =
@@ -494,7 +563,7 @@ function renderHistory() {
 
 
             historyItem.append(
-                historyTask,
+                historyContent,
                 historyDate
             );
 
@@ -597,7 +666,10 @@ taskForm.addEventListener(
                 taskText,
 
             completed:
-                false
+                false,
+
+            priority:
+                priorityInput.value
 
         };
 
@@ -609,6 +681,9 @@ taskForm.addEventListener(
 
         taskInput.value =
             "";
+
+        priorityInput.value =
+            "Medium";
 
         errorMessage.textContent =
             "";

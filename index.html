@@ -43,11 +43,33 @@
                 autocomplete="off"
             >
 
+            <select
+                id="priority-input"
+                aria-label="Task priority"
+            >
+                <option value="Low">
+                    Low
+                </option>
+
+                <option
+                    value="Medium"
+                    selected
+                >
+                    Medium
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+            </select>
+
             <button type="submit">
                 Add Task
             </button>
 
         </form>
+
+</form>
 
         <p
             id="error-message"
