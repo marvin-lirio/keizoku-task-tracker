@@ -13,6 +13,9 @@ const statusFilter =
 const priorityFilter =
     document.querySelector("#priority-filter");
 
+const sortFilter =
+    document.querySelector("#sort-filter");
+
 const taskList =
     document.querySelector("#task-list");
 
@@ -164,11 +167,8 @@ function migrateTaskData() {
 /*
     NEXT TASK NUMBER
 
-    Instead of trusting a separately stored counter,
-    determine the next number from the existing data.
-
-    Deleted task numbers are also considered so
-    identifiers are never reused.
+    Determine the next task number from active
+    and deleted task data.
 */
 
 function getNextTaskNumber() {
@@ -207,14 +207,6 @@ function getNextTaskNumber() {
     NORMALIZATION
 
     Used for duplicate comparison.
-
-    Example:
-
-    "  Finish   Day 3  "
-
-    becomes:
-
-    "finish day 3"
 */
 
 function normalizeTaskText(text) {
@@ -250,6 +242,10 @@ function saveData() {
 
 /*
     STATISTICS
+
+    Statistics always represent the complete
+    task collection, regardless of filters
+    or sorting.
 */
 
 function updateStats() {
@@ -339,6 +335,108 @@ function getFilteredTasks() {
 
 
 /*
+    TASK SORTING
+
+    Sorting controls display order only.
+
+    A copy of the filtered task array is sorted
+    so the original tasks array is never reordered.
+*/
+
+function getSortedTasks(tasksToSort) {
+
+    const selectedSort =
+        sortFilter.value;
+
+
+    const sortedTasks =
+        [...tasksToSort];
+
+
+    const priorityRank = {
+
+        High: 3,
+        Medium: 2,
+        Low: 1
+
+    };
+
+
+    if (
+        selectedSort === "priority-high"
+    ) {
+
+        sortedTasks.sort(
+            (taskA, taskB) => {
+
+                const priorityDifference =
+                    priorityRank[taskB.priority] -
+                    priorityRank[taskA.priority];
+
+
+                if (
+                    priorityDifference !== 0
+                ) {
+
+                    return priorityDifference;
+
+                }
+
+
+                return (
+                    taskA.number -
+                    taskB.number
+                );
+
+            }
+        );
+
+    } else if (
+        selectedSort === "priority-low"
+    ) {
+
+        sortedTasks.sort(
+            (taskA, taskB) => {
+
+                const priorityDifference =
+                    priorityRank[taskA.priority] -
+                    priorityRank[taskB.priority];
+
+
+                if (
+                    priorityDifference !== 0
+                ) {
+
+                    return priorityDifference;
+
+                }
+
+
+                return (
+                    taskA.number -
+                    taskB.number
+                );
+
+            }
+        );
+
+    } else {
+
+        sortedTasks.sort(
+            (taskA, taskB) =>
+                taskA.number -
+                taskB.number
+        );
+
+    }
+
+
+    return sortedTasks;
+
+}
+
+
+/*
     TASK RENDERING
 */
 
@@ -351,7 +449,13 @@ function renderTasks() {
         getFilteredTasks();
 
 
-    filteredTasks.forEach(task => {
+    const displayTasks =
+        getSortedTasks(
+            filteredTasks
+        );
+
+
+    displayTasks.forEach(task => {
 
         const taskItem =
             document.createElement("li");
@@ -791,11 +895,11 @@ clearHistoryButton.addEventListener(
 
 
 /*
-    FILTER CONTROLS
+    FILTER AND SORT CONTROLS
 
-    Changing a filter only changes what is displayed.
+    These controls change presentation only.
 
-    It does not modify or save task data.
+    They do not modify or save task data.
 */
 
 statusFilter.addEventListener(
@@ -809,6 +913,16 @@ statusFilter.addEventListener(
 
 
 priorityFilter.addEventListener(
+    "change",
+    () => {
+
+        renderTasks();
+
+    }
+);
+
+
+sortFilter.addEventListener(
     "change",
     () => {
 

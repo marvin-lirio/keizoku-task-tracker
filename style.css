@@ -417,6 +417,16 @@ button:hover {
         grid-template-columns: 1fr;
     }
 
+    .task-filters {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .filter-group select {
+        width: 100%;
+        min-width: 0;
+    }
+
     .stats {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -444,4 +454,5 @@ button:hover {
         white-space: normal;
     }
 
+    
 }
